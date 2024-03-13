@@ -63,8 +63,24 @@ public class EventJpaService implements EventRepository {
 			if (event.getDate() != null) {
 				new_event.setDate(event.getDate());
 			}
-			eventJpaRepository.save(new_event);
-			return new_event;
+			if (event.getSponsors() != null){
+				List<Sponsor> sponsors = new_event.getSponsors();
+				for (Sponsor sponsor: sponsors){
+					sponsor.getEvents().remove(new_event);
+				}
+				sponsorJpaRepository.saveAll(sponsors);
+				List<Integer> newSponsorIds = new ArrayList<>();
+				for (Sponsor sponsor: event.getSponsors()){
+					newSponsorIds.add(sponsor.getSponsorId());
+				}
+				List<Sponsor> newSponsors = sponsorJpaRepository.findAllById(newSponsorIds).get();
+				for (Sponsor sponsor: newSponsors){
+					sponsor.getEvents().add(new_event);
+				}
+				sponsorJpaRepository.saveAll(newSponsors);
+				new_event.setSponsors(newSponsors);
+			}
+			return eventJpaRepository.save(new_event);;
 		} catch (Exception e) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 		}
