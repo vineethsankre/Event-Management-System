@@ -38,8 +38,19 @@ public class EventJpaService implements EventRepository {
 
 	@Override
 	public Event addEvent(Event event) {
+		List<Integer> sponsorIds = new ArrayList<>();
+		for (Sponsor sponsor: event.getSponsors()){
+			sponsorIds.add(sponsor.getSponsorId());
+		}
+		List<Sponsor> sponsors = sponsorJpaRepository.findAllById(sponsorIds);
+		event.setSponsors(sponsors);
+		for (Sponsor sponsor: sponsors){
+			sponsor.getEvents().add(event);
+		}
 		Event savedEvent = eventJpaRepository.save(event);
+		sponsorJpaRepository.saveAll(sponsors);
 		return savedEvent;
+		
 	}
 
 	@Override
