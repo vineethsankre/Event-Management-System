@@ -42,17 +42,14 @@ public class SponsorJpaService implements SponsorRepository {
 		for (Event event : sponsor.getEvents()) {
 			eventIds.add(event.getEventId());
 		}
-		try {
-			List<Event> complete_events = eventJpaRepository.findAllById(eventIds);
-			if (eventIds.size() != complete_events.size()) {
-				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of the event ids are invalid");
-			}
-			sponsor.setEvents(complete_events);
-			sponsorJpaRepository.save(sponsor);
-			return sponsor;
-		} catch (NoSuchElementException e) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-		}
+		List<Event> events = eventJpaRepository.findAllById(eventIds);
+
+	        if (events.size() != eventIds.size()) {
+	            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+	        }
+	        sponsor.setEvents(events);
+	
+	        return sponsorJpaRepository.save(sponsor);
 	}
 
 	@Override
