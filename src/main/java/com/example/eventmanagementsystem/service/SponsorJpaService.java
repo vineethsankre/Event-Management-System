@@ -54,29 +54,29 @@ public class SponsorJpaService implements SponsorRepository {
 
 	@Override
 	public Sponsor updateSponsor(int sponsorId, Sponsor sponsor) {
-		try {
-			Sponsor existingSponsor = sponsorJpaRepository.findById(sponsorId)
-					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			for (Event event : sponsor.getEvents()) {
-				Event existingEvent = eventJpaRepository.findById(event.getEventId()).orElse(null);
-				if (existingEvent == null) {
-					throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-				}
-			}
-			if (sponsor.getSponsorName() != null) {
-				existingSponsor.setSponsorName(sponsor.getSponsorName());
-			}
-			if (sponsor.getIndustry() != null) {
-				existingSponsor.setIndustry(sponsor.getIndustry());
-			}
-			sponsorJpaRepository.save(existingSponsor);
-
-			return existingSponsor;
-		} catch (ResponseStatusException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-		}
+	        try {
+	            Sponsor newSponsor = sponsorJpaRepository.findById(sponsorId).get();
+	            if (sponsor.getSponsorName() != null) {
+	                newSponsor.setSponsorName(sponsor.getSponsorName());
+	            }
+	            if (sponsor.getIndustry() != null) {
+	                newSponsor.setIndustry(sponsor.getIndustry());
+	            }
+	            if (sponsor.getEvents() != null) {
+	                List<Integer> eventIds = new ArrayList<>();
+	                for (Event event : sponsor.getEvents()) {
+	                    eventIds.add(event.getEventId());
+	                }
+	                List<Event> events = eventJpaRepository.findAllById(eventIds);
+	                if (events.size() != eventIds.size()) {
+	                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+	                }
+	                newSponsor.setEvents(events);
+	            }
+	            return sponsorJpaRepository.save(newSponsor);
+	        } catch (NoSuchElementException e) {
+	            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+	        }
 	}
 
 	@Override
